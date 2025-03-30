@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <title>CF1400 Explorer</title>
+
+        <!-- Bootstrap 5 CSS -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+        <!-- DataTables Core CSS -->
+        <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
+        <!-- DataTables Buttons Bootstrap5 CSS -->
+        <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
+
+        <!-- jQuery (must load before DataTables) -->
+        <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+
+        <!-- DataTables Core JS -->
+        <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+        <!-- DataTables Buttons JS -->
+        <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+        <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
+
+        <!-- Export Dependencies -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+
+        <!-- Buttons for HTML5 Export + Print -->
+        <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+        <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+
+        <style>
+            body {
+                background: linear-gradient(to right, #1e3c72, #2a5298);
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                color: #f5f5f5;
+            }
+            
+            .container {
+                background-color: #ffffff;
+                border-radius: 12px;
+                padding: 2rem;
+                margin-top: 2rem;
+                box-shadow: 0 0 15px rgba(0, 0, 0, 0.15);
+            }
+            
+            h2 {
+                color: #1e3c72;
+                font-weight: bold;
+            }
+            
+            .lead {
+                color: #333;
+            }
+            
+            /* Table header style */
+            table.dataTable thead th {
+                background-color: #1565c0; /* Stronger blue */
+                color: white;
+            }
+            
+            table.dataTable tbody td {
+                color: #333;
+            }
+
+            /* Fix filter label and input */
+            .dataTables_wrapper .dataTables_filter label {
+                color: #333;
+                font-weight: 500;
+            }
+
+            .dataTables_wrapper .dataTables_filter input {
+                background-color: #ffffff;
+                color: #333;
+                border: 1px solid #ccc;
+                padding: 5px 8px;
+                border-radius: 4px;
+                margin-left: 0.5rem;
+            }
+
+            
+            /* Pagination buttons */
+            .dataTables_wrapper .dataTables_paginate .paginate_button {
+                color: #1565c0 !important;
+                border: 1px solid #1565c0 !important;
+                background-color: white !important;
+                margin: 0 2px;
+                border-radius: 4px;
+            }
+            
+            .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+                background-color: #1565c0 !important;
+                color: white !important;
+            }
+            
+            /* Filter/search box */
+            .dataTables_wrapper .dataTables_filter input,
+            .dataTables_wrapper .dataTables_length select {
+                background-color: #ffffff;
+                color: #333;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                padding: 4px 8px;
+            }
+            
+            /* Export buttons */
+            .dataTables_wrapper .dt-buttons .btn {
+                background-color: #0d6efd;
+                color: white;
+                border: none;
+                padding: 6px 12px;
+                border-radius: 4px;
+                margin-right: 5px;
+                font-weight: 500;
+            }
+            
+            .dataTables_wrapper .dt-buttons .btn:hover {
+                background-color: #0b5ed7;
+            }
+
+            /* Fix custom dropdown filters for Filing Port and Dock Name */
+            .filters label {
+                color: #212529 !important; /* Bootstrap default dark */
+                font-weight: 500;
+                margin-right: 0.5rem;
+            }
+
+            .filters select.form-select {
+                background-color: #ffffff;
+                color: #333;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                padding: 5px 10px;
+            }
+
+            /* Dropdown filters */
+            select.form-select {
+                margin-bottom: 1rem;
+                border-radius: 0.25rem;
+                border: 1px solid #ccc;
+                color: #333;
+            }
+
+            .filters {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                flex-wrap: wrap;
+            }
+            
+            
+            footer {
+                color: #ccc;
+                text-align: center;
+                margin-top: 40px;
+                font-size: 0.9rem;
+            }
+        </style>
+
+
+    </head>
+
+    <div class="container mt-4">
+        <div class="p-4 mb-4 bg-light rounded-3 shadow-sm">
+            <div class="container-fluid py-2">
+            <h2 class="display-6">CF1400 Explorer</h2>
+            <p class="lead">
+                Use this dashboard to explore U.S. Customs CF 1400 filings. Filter by Filing Port and Dock Name, or export results in Excel, CSV, or PDF.
+            </p>
+            </div>
+        </div>
+    </div>
+
+    <body>
+
+        <div class="container mt-5">
+            <div class="filters mb-3">
+                <label for="portFilter">Filing Port:</label>
+                <select id="portFilter" class="form-select d-inline mx-2">
+                    <option value="">All</option>
+                </select>
+                
+                <label for="dockFilter">Dock Name:</label>
+                <select id="dockFilter" class="form-select d-inline mx-2">
+                    <option value="">All</option>
+                </select>
+            </div>
+
+            <table id="cf1400Table" class="table table-striped table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                    <th>Manifest #</th>
+                    <th>Filing Port</th>
+                    <th>Filing Date</th>
+                    <th>Vessel Name</th>
+                    <th>IMO #</th>
+                    <th>Operator</th>
+                    <th>Dock Name</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="entry : ${entries}">
+                    <td th:text="${entry.manifestNumber}">12345</td>
+                    <td th:text="${entry.filingPortName}">Port Name</td>
+                    <td th:text="${#temporals.format(entry.filingDate, 'MM/dd/yyyy')}">01/01/2025</td>
+                    <td th:text="${entry.vesselName}">Vessel Name</td>
+                    <td th:text="${entry.imoNumber}">IMO</td>
+                    <td th:text="${entry.operatorName}">Operator</td>
+                    <td th:text="${entry.dockName}">Dock Name</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <script>
+            $(document).ready(function () {
+                var table = $('#cf1400Table').DataTable({
+                    responsive: true,
+                    pageLength: 10,
+                    lengthChange: false,
+                    dom: 'Bfrtip',
+                    buttons: ['copyHtml5', 'csvHtml5', 'excelHtml5', 'pdfHtml5', 'print'],
+                    language: {
+                        search: "Filter records:"
+                    },
+                    initComplete: function () {
+                        var api = this.api();
+                        var filingPortColIdx = 1; // Adjust as needed
+                        var dockNameColIdx = 6;   // Adjust as needed
+            
+                        var $portFilter = $('#portFilter');
+                        var $dockFilter = $('#dockFilter');
+            
+                        // Populate Filing Port dropdown
+                        api.column(filingPortColIdx).data().unique().sort().each(function (d) {
+                            $portFilter.append('<option value="' + d + '">' + d + '</option>');
+                        });
+            
+                        // Handle Filing Port selection
+                        $portFilter.on('change', function () {
+                            var portVal = $(this).val();
+                            var portRegex = portVal ? '^' + $.fn.dataTable.util.escapeRegex(portVal) + '$' : '';
+            
+                            // Filter by Filing Port
+                            api.column(filingPortColIdx).search(portRegex, true, false).draw();
+            
+                            // Get filtered rows for Dock Name dropdown
+                            var filteredDockNames = new Set();
+                            api.rows({ search: 'applied' }).every(function () {
+                                var data = this.data();
+                                filteredDockNames.add(data[dockNameColIdx]);
+                            });
+            
+                            // Populate Dock dropdown
+                            $dockFilter.empty().append('<option value="">All</option>');
+                            Array.from(filteredDockNames).sort().forEach(function (dock) {
+                                $dockFilter.append('<option value="' + dock + '">' + dock + '</option>');
+                            });
+            
+                            // Reset Dock filter
+                            api.column(dockNameColIdx).search('').draw();
+                            $dockFilter.val('');
+                        });
+            
+                        // Handle Dock Name selection
+                        $dockFilter.on('change', function () {
+                            var dockVal = $(this).val();
+                            var dockRegex = dockVal ? '^' + $.fn.dataTable.util.escapeRegex(dockVal) + '$' : '';
+                            api.column(dockNameColIdx).search(dockRegex, true, false).draw();
+                        });
+                    }
+                });
+            });   
+            
+        </script>
+    </body>
+</html>

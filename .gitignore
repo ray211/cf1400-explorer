@@ -1,0 +1,22 @@
+# Java
+/target/
+*.class
+*.jar
+
+# Logs
+*.log
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+
+# OS files
+.DS_Store
+
+# Docker
+*.pid
+**/docker/db_data/
+
+# Environment
+.env
